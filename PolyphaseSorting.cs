@@ -1,9 +1,9 @@
-﻿namespace PolyphaseSorting
+namespace PolyphaseSorting
 {
     public class PolyphaseSorting
     {
         private readonly int n;
-        private readonly Tape[] f;
+        private readonly string[] f;
 
         private int j;
 
@@ -17,7 +17,7 @@
                 throw new ArgumentException("Need at least 3 tapes.");
             n = nTapes;
             Directory.CreateDirectory("Tapes");
-            f = Enumerable.Range(0, n).Select(i => new Tape(Path.Combine("Tapes", $"tape_{i}.tmp"))).ToArray();
+            f = Enumerable.Range(0, n).Select(i => Path.Combine("Tapes", $"tape_{i}.tmp")).ToArray();
         }
 
         // Choose the next tape for writing a run according to fake-run logic
@@ -55,7 +55,8 @@
             Console.ResetColor();
 
             List<int> F = new() { 1, 1 };
-            while (F[^1] < totalRuns) F.Add(F[^1] + F[^2]);
+            while (F[^1] < totalRuns) 
+                F.Add(F[^1] + F[^2]);
 
             int k = F.Count - 1;
             a[n - 1] = 0;
@@ -123,7 +124,7 @@
                 var runLength = File.ReadLines(runs[idx]).Count();
                 runLengths[j].Enqueue(runLength);
 
-                AppendFile(f[j].Path, runs[idx++]);
+                AppendFile(f[j], runs[idx++]);
             }
         }
         // Merge runs from tapes ta[] into a single run on tape outIdx
@@ -136,7 +137,7 @@
 
             for (int i = 0; i < k; i++)
             {
-                readers[i] = new StreamReader(f[ta[i]].Path);
+                readers[i] = new StreamReader(f[ta[i]]);
 
                 // Get the length of the first run from this tape
                 if (runLengths[ta[i]].Count > 0)
@@ -152,7 +153,7 @@
                 }
             }
 
-            using var writer = new StreamWriter(f[outIdx].Path, append: true);
+            using var writer = new StreamWriter(f[outIdx], append: true);
             int outputRunLength = 0;
 
             while (true)
@@ -254,7 +255,7 @@
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"\nSorting complete! Final run on tape {lastTapeWithRuns}\n");
                     Console.ResetColor();
-                    File.Copy(f[lastTapeWithRuns].Path, outputFile, true);
+                    File.Copy(f[lastTapeWithRuns], outputFile, true);
                     break;
                 }
 
@@ -263,7 +264,7 @@
                     // Shouldn't happen, but safety check
                     if (lastTapeWithRuns >= 0)
                     {
-                        File.Copy(f[lastTapeWithRuns].Path, outputFile, true);
+                        File.Copy(f[lastTapeWithRuns], outputFile, true);
                     }
 
                     break;
@@ -328,7 +329,7 @@
         // Create a new tape file and rewrite it to clear it
         private void RewriteTape(int tapeIndex)
         {
-            var path = f[tapeIndex].Path;
+            var path = f[tapeIndex];
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             using var _ = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20);
         }
